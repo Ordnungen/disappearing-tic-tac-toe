@@ -49,7 +49,7 @@ socket.onmessage = (event) => {
 			currentPlayer = data.currentPlayer;
 			document.querySelectorAll('.cell').forEach((cell, index) => {
 				cell.dataset.player = data.board[index];
-				if (data.nextTransparentIndex === index) {
+				if (data.nextDisappear === index) {
 					cell.classList.add('next-transparent');
 				} else {
 					cell.classList.remove('next-transparent');
@@ -57,8 +57,10 @@ socket.onmessage = (event) => {
 			});
 			if (data.winner) {
 				document.getElementById('message').textContent = `${data.winner.toUpperCase()} выиграл!`;
-				document.getElementById('red-score').textContent = `Красный: ${data.scores.red}`;
-				document.getElementById('blue-score').textContent = `Синий: ${data.scores.blue}`;
+				setTimeout(() => {
+					document.querySelectorAll('.cell').forEach(cell => cell.dataset.player = '');
+					document.getElementById('message').textContent = `Новая игра началась. Ход игрока: ${currentPlayer.toUpperCase()}`;
+				}, 2000);
 			} else {
 				document.getElementById('message').textContent = `Ход игрока: ${currentPlayer.toUpperCase()}`;
 			}

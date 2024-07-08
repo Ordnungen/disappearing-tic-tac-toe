@@ -76,10 +76,8 @@ h1 {
 
 .board {
 	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	gap: 5px;
-	width: 310px;
-	height: 310px;
+	grid-template-columns: repeat(3, 100px);
+	grid-gap: 5px;
 	margin: 20px auto;
 }
 
@@ -111,24 +109,22 @@ h1 {
 	animation: fadeIn 0.5s;
 }
 
+.cell.next-transparent {
+	background-color: rgba(255, 255, 255, 0.5);
+}
+
 .info {
 	text-align: center;
-	margin-bottom: 20px;
+}
+
+.cell.next-transparent {
+	background-color: rgba(255, 255, 255, 0.5);
 }
 
 #message {
 	font-size: 1.5em;
 	margin-bottom: 20px;
 	color: #333;
-}
-
-#scores {
-	font-size: 1.2em;
-	margin-bottom: 20px;
-}
-
-#redScore, #blueScore {
-	margin: 5px 0;
 }
 
 #reset {
@@ -144,17 +140,6 @@ h1 {
 
 #reset:hover {
 	background-color: #555;
-}
-
-#red-score,
-#blue-score {
-    font-size: 1.2em;
-    margin: 10px 0;
-    color: #333;
-}
-
-.cell.next-transparent {
-	background-color: rgba(255, 255, 255, 0.5);
 }
 
 @keyframes fadeIn {
