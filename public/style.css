@@ -39,9 +39,9 @@ h1 {
 
 .input,
 .btn {
-	padding: 15px 30px; /* Увеличиваем отступы вокруг текста кнопок */
-	margin: 10px; /* Увеличиваем внешний отступ между кнопками */
-	font-size: 1.2em; /* Увеличиваем размер шрифта кнопок */
+	padding: 15px 30px;
+	margin: 10px;
+	font-size: 1.2em;
 	width: calc(100% - 30px);
 	border-radius: 10px;
 	border: 1px solid #ddd;
@@ -65,8 +65,8 @@ h1 {
 }
 
 .btn-large {
-	font-size: 1.5em; /* Увеличиваем размер шрифта и отступы кнопки "Создать комнату" */
-	padding: 20px 40px; /* Увеличиваем отступы вокруг текста кнопки "Создать комнату" */
+	font-size: 1.5em;
+	padding: 20px 40px;
 	background-color: #ff5e62;
 }
 
@@ -77,10 +77,10 @@ h1 {
 .board {
 	display: grid;
 	grid-template-columns: repeat(3, 1fr);
-	gap: 5px; /* Уменьшаем расстояние между ячейками */
-	width: 310px; /* Устанавливаем фиксированную ширину доски */
-	height: 310px; /* Устанавливаем фиксированную высоту доски */
-	margin: 0 auto; /* Центрируем доску горизонтально */
+	gap: 5px;
+	width: 310px;
+	height: 310px;
+	margin: 0 auto;
 }
 
 .cell {
@@ -99,6 +99,10 @@ h1 {
 
 .cell:hover {
 	background-color: #f0f0f0;
+}
+
+.cell.fading {
+	opacity: 0.5;
 }
 
 .cell[data-player="red"] {
