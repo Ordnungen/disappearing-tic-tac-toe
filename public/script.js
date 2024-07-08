@@ -1,4 +1,4 @@
-const socket = io();
+const socket = new WebSocket(`wss://${window.location.host}`);
 
 let currentPlayer = 'red';
 let board = ['', '', '', '', '', '', '', '', ''];
