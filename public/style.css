@@ -101,10 +101,6 @@ h1 {
 	background-color: #f0f0f0;
 }
 
-.cell.fading {
-	opacity: 0.5;
-}
-
 .cell[data-player="red"] {
 	background-color: #ff6666;
 	animation: fadeIn 0.5s;
@@ -113,6 +109,10 @@ h1 {
 .cell[data-player="blue"] {
 	background-color: #6666ff;
 	animation: fadeIn 0.5s;
+}
+
+.cell.transparent {
+	opacity: 0.5;
 }
 
 .info {

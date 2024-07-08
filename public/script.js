@@ -1,108 +1,69 @@
-const socket = new WebSocket(`wss://${window.location.host}`);
+const socket = new WebSocket(`ws://${window.location.host}`);
+let roomKey = null;
+let currentPlayer = null;
+let lastMoveIndex = null;
 
-let currentPlayer = 'red';
-let board = ['', '', '', '', '', '', '', '', ''];
-let playerMarks = { red: [], blue: [] };
-let lastMove = { red: null, blue: null };
-
-socket.on('moveMade', (data) => {
-	const { index, player } = data;
-	makeMove(index, player, false);
+document.getElementById('create-room').addEventListener('click', () => {
+	socket.send(JSON.stringify({ type: 'create' }));
 });
 
-document.querySelectorAll('.cell').forEach((cell, index) => {
+document.getElementById('join-room').addEventListener('click', () => {
+	const key = document.getElementById('room-key').value;
+	socket.send(JSON.stringify({ type: 'join', roomKey: key }));
+});
+
+document.querySelectorAll('.cell').forEach(cell => {
 	cell.addEventListener('click', () => {
-		if (!board[index] && currentPlayer === player) {
-			makeMove(index, currentPlayer, true);
+		if (!cell.dataset.player && roomKey && currentPlayer) {
+			const index = cell.dataset.index;
+			socket.send(JSON.stringify({
+				type: 'move',
+				roomKey: roomKey,
+				index: index,
+				currentPlayer: currentPlayer
+			}));
 		}
 	});
 });
 
-function makeMove(index, player, emit = true) {
-	if (emit) {
-		socket.emit('makeMove', { index, player });
+socket.onmessage = (event) => {
+	const data = JSON.parse(event.data);
+	switch (data.type) {
+		case 'created':
+			roomKey = data.roomKey;
+			document.querySelector('.menu').style.display = 'none';
+			document.querySelector('.board').style.display = 'grid';
+			document.querySelector('.info').style.display = 'block';
+			document.getElementById('message').textContent = `Комната создана. Ключ: ${roomKey}. Ожидание игрока...`;
+			break;
+		case 'joined':
+			roomKey = data.roomKey;
+			document.querySelector('.menu').style.display = 'none';
+			document.querySelector('.board').style.display = 'grid';
+			document.querySelector('.info').style.display = 'block';
+			break;
+		case 'start':
+			currentPlayer = data.currentPlayer;
+			document.getElementById('message').textContent = `Ход игрока: ${currentPlayer.toUpperCase()}`;
+			break;
+		case 'update':
+			currentPlayer = data.currentPlayer;
+			document.querySelectorAll('.cell').forEach((cell, index) => {
+				cell.dataset.player = data.board[index];
+				cell.classList.remove('transparent');
+			});
+			if (data.lastMoveIndex !== undefined) {
+				lastMoveIndex = data.lastMoveIndex;
+				document.querySelector(`.cell[data-index="${lastMoveIndex}"]`).classList.add('transparent');
+			}
+			if (data.winner) {
+				document.getElementById('message').textContent = `${data.winner.toUpperCase()} выиграл!`;
+			} else {
+				document.getElementById('message').textContent = `Ход игрока: ${currentPlayer.toUpperCase()}`;
+			}
+			break;
+		case 'error':
+			alert(data.message);
+			break;
 	}
-
-	if (lastMove[player] !== null) {
-		document.querySelectorAll('.cell')[lastMove[player]].classList.remove('fading');
-	}
-
-	board[index] = player;
-	playerMarks[player].push(index);
-	lastMove[player] = index;
-
-	updateBoard();
-	checkWinner();
-
-	if (playerMarks[player].length > 3) {
-		const oldIndex = playerMarks[player].shift();
-		board[oldIndex] = '';
-		document.querySelectorAll('.cell')[oldIndex].classList.remove(player);
-		document.querySelectorAll('.cell')[oldIndex].classList.remove('fading');
-	}
-
-	currentPlayer = currentPlayer === 'red' ? 'blue' : 'red';
-	if (lastMove[currentPlayer] !== null) {
-		document.querySelectorAll('.cell')[lastMove[currentPlayer]].classList.add('fading');
-	}
-}
-
-function updateBoard() {
-	board.forEach((cell, index) => {
-		const cellElement = document.querySelectorAll('.cell')[index];
-		cellElement.classList.remove('red', 'blue');
-		if (cell) {
-			cellElement.classList.add(cell);
-		}
-	});
-}
-
-function checkWinner() {
-	const winningCombinations = [
-		[0, 1, 2],
-		[3, 4, 5],
-		[6, 7, 8],
-		[0, 3, 6],
-		[1, 4, 7],
-		[2, 5, 8],
-		[0, 4, 8],
-		[2, 4, 6]
-	];
-
-	let winner = null;
-
-	winningCombinations.forEach(combination => {
-		const [a, b, c] = combination;
-		if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-			winner = board[a];
-		}
-	});
-
-	if (winner) {
-		document.getElementById('message').textContent = `${winner.toUpperCase()} wins!`;
-		document.querySelectorAll('.cell').forEach(cell => cell.removeEventListener('click', handleClick));
-	}
-}
-
-document.getElementById('reset').addEventListener('click', () => {
-	board = ['', '', '', '', '', '', '', '', ''];
-	playerMarks = { red: [], blue: [] };
-	lastMove = { red: null, blue: null };
-	currentPlayer = 'red';
-	document.querySelectorAll('.cell').forEach((cell, index) => {
-		cell.classList.remove('red', 'blue', 'fading');
-		cell.addEventListener('click', handleClick);
-	});
-	document.getElementById('message').textContent = '';
-});
-
-function handleClick(event) {
-	const index = Array.from(document.querySelectorAll('.cell')).indexOf(event.target);
-	if (!board[index] && currentPlayer === player) {
-		makeMove(index, currentPlayer, true);
-	}
-}
-
-if (lastMove[currentPlayer] !== null) {
-	document.querySelectorAll('.cell')[lastMove[currentPlayer]].classList.add('fading');
-}
+};
