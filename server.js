@@ -36,7 +36,8 @@ wss.on('connection', (ws) => {
 					ws.send(JSON.stringify({ type: 'joined', roomKey: data.roomKey, color }));
 					room.players.forEach(player => player.send(JSON.stringify({
 						type: 'start',
-						currentPlayer: room.currentPlayer
+						currentPlayer: room.currentPlayer,
+						nextTransparentIndex: room.nextTransparentIndex
 					})));
 					playerColor = color;
 				} else {
@@ -61,7 +62,9 @@ wss.on('connection', (ws) => {
 					const winner = checkWin(gameRoom.board, data.currentPlayer);
 					if (winner) {
 						gameRoom.scores[winner]++;
+						gameRoom.nextTransparentIndex = null;
 					}
+
 					gameRoom.currentPlayer = gameRoom.currentPlayer === 'red' ? 'blue' : 'red';
 
 					gameRoom.players.forEach(player => player.send(JSON.stringify({
