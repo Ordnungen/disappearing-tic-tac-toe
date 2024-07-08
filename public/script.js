@@ -1,7 +1,6 @@
 const socket = new WebSocket(`ws://${window.location.host}`);
 let roomKey = null;
 let currentPlayer = null;
-let lastMoveIndex = null;
 
 document.getElementById('create-room').addEventListener('click', () => {
 	socket.send(JSON.stringify({ type: 'create' }));
@@ -50,14 +49,16 @@ socket.onmessage = (event) => {
 			currentPlayer = data.currentPlayer;
 			document.querySelectorAll('.cell').forEach((cell, index) => {
 				cell.dataset.player = data.board[index];
-				cell.classList.remove('transparent');
+				if (data.nextTransparentIndex === index) {
+					cell.classList.add('next-transparent');
+				} else {
+					cell.classList.remove('next-transparent');
+				}
 			});
-			if (data.lastMoveIndex !== undefined) {
-				lastMoveIndex = data.lastMoveIndex;
-				document.querySelector(`.cell[data-index="${lastMoveIndex}"]`).classList.add('transparent');
-			}
 			if (data.winner) {
 				document.getElementById('message').textContent = `${data.winner.toUpperCase()} выиграл!`;
+				document.getElementById('red-score').textContent = `Красный: ${data.scores.red}`;
+				document.getElementById('blue-score').textContent = `Синий: ${data.scores.blue}`;
 			} else {
 				document.getElementById('message').textContent = `Ход игрока: ${currentPlayer.toUpperCase()}`;
 			}

@@ -9,27 +9,43 @@ const wss = new WebSocket.Server({ server });
 const rooms = {};
 
 wss.on('connection', (ws) => {
+	let playerColor = null;
+
 	ws.on('message', (message) => {
 		const data = JSON.parse(message);
 		switch (data.type) {
 			case 'create':
 				const roomKey = generateRoomKey();
-				rooms[roomKey] = { players: [ws], board: ['', '', '', '', '', '', '', '', ''], moveHistory: [] };
-				ws.send(JSON.stringify({ type: 'created', roomKey }));
+				rooms[roomKey] = {
+					players: [ws],
+					board: ['', '', '', '', '', '', '', '', ''],
+					moveHistory: [],
+					currentPlayer: 'red',
+					scores: { red: 0, blue: 0 },
+					nextTransparentIndex: null
+				};
+				ws.send(JSON.stringify({ type: 'created', roomKey, color: 'red' }));
+				playerColor = 'red';
 				break;
 			case 'join':
 				const room = rooms[data.roomKey];
 				if (room && room.players.length < 2) {
+					const color = room.players.length === 0 ? 'red' : 'blue';
 					room.players.push(ws);
-					ws.send(JSON.stringify({ type: 'joined', roomKey: data.roomKey }));
-					room.players.forEach(player => player.send(JSON.stringify({ type: 'start', currentPlayer: 'red' })));
+					room.currentPlayer = 'red';
+					ws.send(JSON.stringify({ type: 'joined', roomKey: data.roomKey, color }));
+					room.players.forEach(player => player.send(JSON.stringify({
+						type: 'start',
+						currentPlayer: room.currentPlayer
+					})));
+					playerColor = color;
 				} else {
 					ws.send(JSON.stringify({ type: 'error', message: 'Room not found or full' }));
 				}
 				break;
 			case 'move':
 				const gameRoom = rooms[data.roomKey];
-				if (gameRoom) {
+				if (gameRoom && data.currentPlayer === playerColor) {
 					gameRoom.board[data.index] = data.currentPlayer;
 					gameRoom.moveHistory.push(data.index);
 
@@ -38,12 +54,24 @@ wss.on('connection', (ws) => {
 						gameRoom.board[lastMoveIndex] = '';
 					}
 
+					gameRoom.nextTransparentIndex = gameRoom.moveHistory.length > 0
+						? gameRoom.moveHistory[0]
+						: null;
+
+					const winner = checkWin(gameRoom.board, data.currentPlayer);
+					if (winner) {
+						gameRoom.scores[winner]++;
+					}
+					gameRoom.currentPlayer = gameRoom.currentPlayer === 'red' ? 'blue' : 'red';
+
 					gameRoom.players.forEach(player => player.send(JSON.stringify({
 						type: 'update',
 						board: gameRoom.board,
 						moveHistory: gameRoom.moveHistory,
-						currentPlayer: data.currentPlayer === 'red' ? 'blue' : 'red',
-						winner: checkWin(gameRoom.board, data.currentPlayer) ? data.currentPlayer : null
+						currentPlayer: gameRoom.currentPlayer,
+						winner: winner ? winner : null,
+						scores: gameRoom.scores,
+						nextTransparentIndex: gameRoom.nextTransparentIndex
 					})));
 				}
 				break;
@@ -80,7 +108,7 @@ function checkWin(board, player) {
 		return combination.every(index => {
 			return board[index] === player;
 		});
-	});
+	}) ? player : null;
 }
 
 app.use(express.static('public'));
