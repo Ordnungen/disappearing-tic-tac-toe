@@ -1,0 +1,13 @@
+{
+	"name": "disappearing-tic-tac-toe",
+	"version": "1.0.0",
+	"description": "Online Disappearing Tic-Tac-Toe Game",
+	"main": "server.js",
+	"scripts": {
+		"start": "node server.js"
+	},
+	"dependencies": {
+		"express": "^4.17.1",
+		"ws": "^8.2.3"
+	}
+}
